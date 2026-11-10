@@ -10,7 +10,7 @@
     background:radial-gradient(ellipse at top, #141428, #050510);
     color:#fff; font-family:'Segoe UI',sans-serif;
     min-height:100vh; padding:10px; display:flex; flex-direction:column; align-items:center;
-    overflow-x:hidden;
+    overflow-x:hidden; overflow-y:auto;
   }
   h1 {
     margin-bottom:6px; font-size:22px; text-align:center;
@@ -23,6 +23,11 @@
   @keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
   @keyframes ultGlow { 0%,100% { box-shadow:0 0 15px #ffe66d, 0 0 30px #ffe66d66; } 50% { box-shadow:0 0 30px #ffe66d, 0 0 60px #ffe66d; } }
   @keyframes ringOut { 0% { transform:scale(0.3); opacity:1; } 100% { transform:scale(3); opacity:0; } }
+  @keyframes damageFloat { 0% { opacity:1; transform:translateY(0) scale(1); } 100% { opacity:0; transform:translateY(-60px) scale(0.7); } }
+  @keyframes poolFade { 0% { opacity:0.6; } 100% { opacity:0; } }
+  @keyframes pickupBob { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-4px); } }
+  @keyframes trailPulse { 0% { opacity:0.6; } 100% { opacity:0; } }
+  @keyframes shrinkArena { 0% { border-color:#ff4444; } 100% { border-color:#ff0000; } }
 
   .screen { display:none; width:100%; max-width:1200px; animation:fadeIn 0.3s; }
   .screen.active { display:block; }
@@ -297,7 +302,121 @@
   #winnerStats { font-size:15px; color:#aaa; margin-bottom:20px; }
   #winnerStats b { color:#ffe66d; }
 
-  /* МОБИЛЬНАЯ */
+  /* DAMAGE NUMBERS */
+  .dmg-number {
+    position:absolute; font-weight:bold; pointer-events:none;
+    animation:damageFloat 1s ease-out forwards; z-index:50;
+    text-shadow:0 0 8px #000, 0 0 3px #000;
+    white-space:nowrap;
+  }
+  .dmg-number.normal { font-size:13px; color:#ff4444; }
+  .dmg-number.crit { font-size:18px; color:#ffee00; }
+  .dmg-number.heal { font-size:13px; color:#44ff44; }
+  .dmg-number.ult { font-size:16px; color:#ffe66d; }
+
+  /* DEATH POOL */
+  .death-pool {
+    position:absolute; border-radius:50%; pointer-events:none;
+    animation:poolFade 2.5s ease-out forwards; z-index:5;
+  }
+
+  /* TRAIL */
+  .ball-trail {
+    position:absolute; border-radius:50%; pointer-events:none;
+    z-index:1; opacity:0.4;
+  }
+
+  /* PICKUP */
+  .pickup {
+    position:absolute; width:24px; height:24px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-size:14px; font-weight:bold; pointer-events:none;
+    animation:pickupBob 1s ease-in-out infinite; z-index:15;
+    box-shadow:0 0 10px currentColor;
+  }
+  .pickup.health { background:#44ff4444; color:#44ff44; border:2px solid #44ff44; }
+  .pickup.ultimate { background:#ffe66d44; color:#ffe66d; border:2px solid #ffe66d; }
+
+  /* SPEED CONTROLS */
+  #speedControls {
+    position:absolute; top:10px; left:50%; transform:translateX(-50%);
+    display:flex; gap:4px; z-index:100;
+  }
+  #speedControls button {
+    padding:4px 10px; font-size:11px; border:none; border-radius:5px;
+    cursor:pointer; background:#1a1a3acc; color:#fff;
+    border:1px solid #444; transition:all 0.15s;
+  }
+  #speedControls button.active {
+    background:#4ecdc4; color:#000; border-color:#4ecdc4; font-weight:bold;
+  }
+  #speedControls button:hover { background:#2a2a5a; }
+
+  /* ARTIFACTS */
+  #artifactScreen { padding:15px; max-width:700px; margin:0 auto; }
+  .artifact-grid { display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin:12px 0; }
+  .artifact-card {
+    background:#1a1a3a; border:2px solid #333; border-radius:10px;
+    padding:10px 12px; cursor:pointer; width:180px; text-align:center;
+    transition:all 0.15s;
+  }
+  .artifact-card:hover { border-color:#4ecdc4; transform:translateY(-2px); }
+  .artifact-card.selected { border-color:#ffe66d; box-shadow:0 0 15px #ffe66d; }
+  .artifact-card .aname { font-size:13px; font-weight:bold; margin-bottom:4px; }
+  .artifact-card .adesc { font-size:10px; color:#aaa; }
+  .artifact-card .aicon { font-size:24px; margin-bottom:4px; }
+  .equipped-artifacts { display:flex; gap:8px; justify-content:center; margin:10px 0; flex-wrap:wrap; }
+  .equipped-art {
+    background:#ffe66d22; border:2px solid #ffe66d; border-radius:8px;
+    padding:6px 10px; font-size:11px; display:flex; align-items:center; gap:6px;
+  }
+
+  /* MODE BUTTONS */
+  .mode-btn {
+    padding:12px 18px; font-size:14px; border:2px solid #4ecdc4;
+    border-radius:10px; cursor:pointer; background:#1a1a3a;
+    color:#fff; transition:all 0.15s; text-align:center;
+  }
+  .mode-btn:hover { background:#2a2a5a; border-color:#ffe66d; transform:translateY(-2px); }
+  .mode-btn .mode-icon { font-size:20px; display:block; margin-bottom:4px; }
+  .mode-btn .mode-name { font-weight:bold; font-size:13px; }
+  .mode-btn .mode-desc { font-size:10px; color:#aaa; margin-top:2px; }
+
+  /* FULLSCREEN BTN */
+  #fullscreenBtn {
+    position:absolute; bottom:10px; right:10px; z-index:100;
+    padding:6px 12px; font-size:12px; border:none; border-radius:6px;
+    cursor:pointer; background:#4ecdc4cc; color:#000; font-weight:bold;
+    transition:all 0.15s;
+  }
+  #fullscreenBtn:hover { background:#4ecdc4; }
+
+  /* INFINITE MODE */
+  #infiniteInfo {
+    position:absolute; top:40px; left:50%; transform:translateX(-50%);
+    font-size:12px; color:#ffe66d; z-index:100;
+    background:#00000088; padding:4px 12px; border-radius:5px;
+  }
+
+  /* SIEGE MODE */
+  .siege-label {
+    position:absolute; font-size:10px; color:#ff6b6b;
+    text-shadow:0 0 5px #ff6b6b; z-index:10;
+  }
+
+  /* BATTLE ROYALE */
+  .br-count {
+    position:absolute; top:40px; right:10px; font-size:14px;
+    color:#ff6b6b; font-weight:bold; z-index:100;
+    background:#00000088; padding:4px 10px; border-radius:5px;
+  }
+  .br-shrink { animation:shrinkArena 1s infinite; }
+
+  /* SANDBOX */
+  .sandbox-slider { width:100%; margin:4px 0; }
+  .sandbox-row { display:flex; justify-content:space-between; align-items:center; font-size:12px; margin:3px 0; }
+
+  /* MOBILE */
   @media (max-width: 900px) {
     #battleLayout { flex-direction:column; gap:8px; }
     .fighterCard { width:100%; max-width:400px; flex-direction:row; display:flex; align-items:center; gap:10px; padding:8px; }
@@ -305,6 +424,9 @@
     .fighterCard .fc-bar, .fighterCard .fc-ult-bar { margin-top:4px; }
     .fighterCard .fc-bars { flex:2; }
     .fighterCard .fc-ult-label { display:none; }
+    #speedControls { top:5px; }
+    #speedControls button { padding:3px 7px; font-size:10px; }
+    #fullscreenBtn { bottom:5px; right:5px; padding:4px 8px; font-size:10px; }
   }
   @media (max-width: 800px) {
     .fp-grid { grid-template-columns:1fr; gap:6px; }
@@ -333,6 +455,10 @@
     #battleInfo { font-size:11px; gap:10px; }
     #exitBtn, #pauseBtn { top:5px; padding:4px 10px; font-size:10px; }
     #pauseOverlay h2 { font-size:32px; }
+    .artifact-card { width:calc(50% - 4px); min-width:140px; }
+    .mode-btn { width:calc(50% - 4px); }
+    .br-count { top:35px; font-size:12px; }
+    #infiniteInfo { top:35px; font-size:11px; }
   }
   @media (max-width: 500px) {
     .fp-stats { gap:3px; }
@@ -341,10 +467,32 @@
     .fp-section { padding:5px 7px; }
     .fp-sec-name { font-size:11px; }
     .fp-sec-desc { font-size:10px; }
+    .dmg-number.normal { font-size:11px; }
+    .dmg-number.crit { font-size:14px; }
+    .dmg-number.heal { font-size:11px; }
+    .dmg-number.ult { font-size:13px; }
   }
   @media (max-width: 400px) {
     .pick-card { width:55px; }
     .lib-card { width:100%; }
+    #speedControls button { padding:2px 5px; font-size:9px; }
+  }
+  @media (orientation: landscape) and (max-height: 500px) {
+    body { padding:3px; }
+    h1 { font-size:14px; margin-bottom:3px; }
+    #arena { max-height:calc(100vh - 120px); }
+    .fighterCard { padding:4px; }
+    .fighterCard .fc-dot { width:28px; height:28px; }
+    .fighterCard .fc-name { font-size:11px; }
+    .fighterCard .fc-hp-text { font-size:9px; }
+    .fighterCard .fc-bar { height:8px; }
+    .fighterCard .fc-ult-bar { height:6px; }
+    #speedControls { top:2px; }
+    #fullscreenBtn { display:none; }
+  }
+  @media screen and (display-mode: fullscreen) {
+    body { padding:0; }
+    #arena { max-width:100vw; max-height:calc(100vh - 60px); }
   }
 </style>
 </head>
@@ -356,6 +504,12 @@
   <div id="mainMenu">
     <button class="menu-btn" id="goQuickBtn">⚔️ Быстрый бой</button>
     <button class="menu-btn" id="goTournamentBtn">🏆 Турнир</button>
+    <div style="text-align:center; color:#4ecdc4; font-size:13px; font-weight:bold; margin:6px 0 4px;">🎮 Новые режимы</div>
+    <button class="menu-btn" id="goBattleRoyaleBtn">👑 Battle Royale</button>
+    <button class="menu-btn" id="goSiegeBtn">🐉 Осада (1 vs 3)</button>
+    <button class="menu-btn" id="goInfiniteBtn">♾️ Бесконечный</button>
+    <button class="menu-btn" id="goSandboxBtn">🔧 Песочница</button>
+    <div style="border-top:1px solid #333; margin:8px 0;"></div>
     <button class="menu-btn secondary" id="goLibraryBtn">📖 Библиотека шаров</button>
     <button class="menu-btn secondary" id="goSettingsBtn">⚙️ Настройки</button>
   </div>
@@ -394,8 +548,106 @@
     <div class="setting-row"><label>🎲 Модификаторы боя</label><input type="checkbox" id="modsOn" checked></div>
     <div class="setting-row"><label>🔊 Звук</label><input type="checkbox" id="soundOn" checked></div>
     <div class="setting-row"><label>✨ Эффекты</label><input type="checkbox" id="fxOn" checked></div>
+    <div class="setting-row"><label>🎒 Артефакты</label><input type="checkbox" id="artifactsOn" checked></div>
+    <div class="setting-row"><label>💊 Подбираемые предметы</label><input type="checkbox" id="pickupsOn" checked></div>
+    <div class="setting-row"><label>🌟 Числа урона</label><input type="checkbox" id="dmgNumbersOn" checked></div>
+    <div class="setting-row"><label>🎆 Следы и частицы</label><input type="checkbox" id="trailsOn" checked></div>
   </div>
   <div style="text-align:center;"><button class="menu-btn secondary" id="closeSettingsBtn" style="display:inline-block; padding:8px 16px; font-size:13px;">← Назад</button></div>
+</div>
+
+<!-- ARTIFACTS -->
+<div id="artifactScreen" class="screen">
+  <div style="text-align:center; margin-bottom:10px;">
+    <button class="menu-btn secondary" id="artBackBtn" style="display:inline-block; padding:8px 16px; font-size:13px;">← Назад</button>
+  </div>
+  <h2 style="text-align:center; color:#ffe66d; font-size:16px; margin-bottom:6px;">🎒 Артефакты</h2>
+  <p style="text-align:center; color:#888; font-size:11px; margin-bottom:10px;">Выбери до 2 артефактов для этого боя</p>
+  <div class="equipped-artifacts" id="equippedArtifacts"></div>
+  <div id="artifactGrid" class="artifact-grid"></div>
+  <div style="text-align:center; margin-top:15px;">
+    <button class="menu-btn" id="artConfirmBtn" disabled style="display:inline-block; padding:9px 20px; font-size:14px;">▶️ В бой!</button>
+  </div>
+</div>
+
+<!-- BATTLE ROYALE -->
+<div id="battleRoyaleScreen" class="screen">
+  <div style="text-align:center; padding:20px;">
+    <h2 style="color:#ff6b6b; margin-bottom:15px;">👑 Battle Royale</h2>
+    <p style="color:#aaa; font-size:12px; margin-bottom:15px;">8 шаров на арене. Последний выживший побеждает. Арена сужается!</p>
+    <div style="display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
+      <button class="mode-btn" data-br="8">
+        <span class="mode-icon">👑</span>
+        <span class="mode-name">8 игроков</span>
+        <span class="mode-desc">4 круга</span>
+      </button>
+    </div>
+    <div style="margin-top:20px;"><button class="menu-btn secondary" id="brBackBtn" style="display:inline-block; padding:8px 16px; font-size:13px;">← Назад</button></div>
+  </div>
+</div>
+
+<!-- SIEGE -->
+<div id="siegeScreen" class="screen">
+  <div style="text-align:center; padding:20px;">
+    <h2 style="color:#ff6b6b; margin-bottom:15px;">🐉 Осада (1 vs 3)</h2>
+    <p style="color:#aaa; font-size:12px; margin-bottom:15px;">Один мощный шар против трёх слабых</p>
+    <div style="display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
+      <button class="mode-btn" data-siege="dragon">
+        <span class="mode-icon">🐉</span>
+        <span class="mode-name">Дракон</span>
+        <span class="mode-desc">200 HP, ×1.5 урон</span>
+      </button>
+      <button class="mode-btn" data-siege="colossus">
+        <span class="mode-icon">🗿</span>
+        <span class="mode-name">Колосс</span>
+        <span class="mode-desc">280 HP, мощные удары</span>
+      </button>
+      <button class="mode-btn" data-siege="berserk">
+        <span class="mode-icon">💢</span>
+        <span class="mode-name">Берсерк</span>
+        <span class="mode-desc">Высокий урон, ярость</span>
+      </button>
+    </div>
+    <div style="margin-top:20px;"><button class="menu-btn secondary" id="siegeBackBtn" style="display:inline-block; padding:8px 16px; font-size:13px;">← Назад</button></div>
+  </div>
+</div>
+
+<!-- INFINITE -->
+<div id="infiniteScreen" class="screen">
+  <div style="text-align:center; padding:20px;">
+    <h2 style="color:#4ecdc4; margin-bottom:15px;">♾️ Бесконечный режим</h2>
+    <p style="color:#aaa; font-size:12px; margin-bottom:15px;">Один шар против волн врагов. HP восстанавливается между раундами!</p>
+    <div style="display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
+      <button class="mode-btn" data-inf="any">
+        <span class="mode-icon">🎲</span>
+        <span class="mode-name">Любой шар</span>
+        <span class="mode-desc">Случайный выбор</span>
+      </button>
+    </div>
+    <div style="margin-top:20px;"><button class="menu-btn secondary" id="infBackBtn" style="display:inline-block; padding:8px 16px; font-size:13px;">← Назад</button></div>
+  </div>
+</div>
+
+<!-- SANDBOX -->
+<div id="sandboxScreen" class="screen">
+  <div style="text-align:center; padding:15px;">
+    <h2 style="color:#ffe66d; margin-bottom:10px;">🔧 Песочница</h2>
+    <p style="color:#aaa; font-size:11px; margin-bottom:12px;">Выбери двух шаров и настрой их характеристики</p>
+    <div style="display:flex; gap:15px; justify-content:center; flex-wrap:wrap;">
+      <div style="background:#1a1a3a; border:2px solid #ff6b6b66; border-radius:10px; padding:12px; min-width:180px;">
+        <h3 style="color:#ff6b6b; font-size:13px; margin-bottom:8px;">Боец A</h3>
+        <div id="sandboxA" style="display:flex; flex-direction:column; gap:4px;"></div>
+      </div>
+      <div style="background:#1a1a3a; border:2px solid #4ecdc466; border-radius:10px; padding:12px; min-width:180px;">
+        <h3 style="color:#4ecdc4; font-size:13px; margin-bottom:8px;">Боец B</h3>
+        <div id="sandboxB" style="display:flex; flex-direction:column; gap:4px;"></div>
+      </div>
+    </div>
+    <div style="margin-top:12px;">
+      <button class="menu-btn" id="sandboxFightBtn" disabled style="display:inline-block; padding:9px 20px; font-size:14px;">▶️ В бой!</button>
+    </div>
+    <div style="margin-top:12px;"><button class="menu-btn secondary" id="sandboxBackBtn" style="display:inline-block; padding:8px 16px; font-size:13px;">← Назад</button></div>
+  </div>
 </div>
 
 <!-- ВЫБОР РАЗМЕРА ТУРНИРА -->
@@ -461,6 +713,11 @@
 <div id="arenaScreen" class="screen">
   <button id="pauseBtn">⏸️</button>
   <button id="exitBtn">✕</button>
+  <div id="speedControls">
+    <button class="speed-btn active" data-speed="1">1×</button>
+    <button class="speed-btn" data-speed="2">2×</button>
+    <button class="speed-btn" data-speed="4">4×</button>
+  </div>
   <div id="battleLayout">
     <div class="fighterCard a" id="cardA">
       <div class="fc-top">
@@ -504,7 +761,10 @@
   <div id="battleInfo">
     <div>Модификатор: <span id="modInfo">—</span></div>
     <div>Комбо: <span id="comboInfo">0</span></div>
+    <div id="infiniteInfo" style="display:none;">Волна: <span id="waveNum">1</span></div>
+    <div id="brCount" class="br-count" style="display:none;">Осталось: <span id="brAlive">8</span></div>
   </div>
+  <button id="fullscreenBtn">⛶ Полный экран</button>
 </div>
 
 <!-- ПАНЕЛЬ СРАВНЕНИЯ БОЙЦОВ -->
@@ -598,6 +858,7 @@
 const settings = {
   hpMult:1, dmgMult:1, speedMult:1, arenaSize:'m',
   critsOn:true, ultsOn:true, modsOn:true, soundOn:true, fxOn:true,
+  artifactsOn:true, pickupsOn:true, dmgNumbersOn:true, trailsOn:true,
 };
 const ARENA_SIZES = { s:{w:500,h:340}, m:{w:600,h:400}, l:{w:700,h:460}, xl:{w:800,h:520} };
 let ARENA_W = 600, ARENA_H = 400;
@@ -663,9 +924,9 @@ const BALL_TYPES = [
   { id:'thunder', name:'Громовержец', color:'#ddcc00', pattern:'stripes', radius:21, hp:135, dmg:3, speed:2.6,
     desc:'Бьёт молнией', ability:'thunder', trigger:'timer', cd:3500, ultRate:1.1,
     ultName:'Цепная молния', ultDesc:'3 удара по 15' },
-  { id:'frost', name:'Мороз', color:'#88aadd', pattern:'cross', radius:21, hp:140, dmg:3, speed:2.5,
-    desc:'Замораживает', ability:'frost', trigger:'timer', cd:5000, ultRate:0.9,
-    ultName:'Ледяной век', ultDesc:'Заморозка 4 сек' },
+  { id:'cryomancer', name:'Криомант', color:'#88aadd', pattern:'cross', radius:21, hp:140, dmg:3, speed:2.5,
+    desc:'Станит + замедляет при ударе', ability:'cryo', trigger:'hit', cd:2800, ultRate:0.9,
+    ultName:'Ледяной плен', ultDesc:'Стан 2 сек + замедление 4 сек' },
   { id:'mushroom', name:'Гриб', color:'#cc3399', pattern:'dots', radius:22, hp:145, dmg:3, speed:2.3,
     desc:'Споры, лечится в них', ability:'spores', trigger:'timer', cd:3000, ultRate:1.3,
     ultName:'Споро-бомба', ultDesc:'3 облака спор + лечение' },
@@ -678,15 +939,15 @@ const BALL_TYPES = [
   { id:'jester', name:'Шут', color:'#dd22dd', pattern:'stripes', radius:20, hp:130, dmg:3, speed:2.8,
     desc:'Случайный эффект', ability:'random', trigger:'hit', cd:1500, ultRate:1.6,
     ultName:'Хаос', ultDesc:'Все эффекты сразу' },
-  { id:'snake', name:'Змея', color:'#228822', pattern:'spiral', radius:20, hp:130, dmg:3, speed:2.7,
-    desc:'Двойной яд', ability:'snakePoison', trigger:'hit', cd:2000, ultRate:1.3,
-    ultName:'Ядовитый укус', ultDesc:'15 урона + яд 9 сек' },
+  { id:'cobra', name:'Кобра', color:'#228822', pattern:'spiral', radius:20, hp:130, dmg:3, speed:2.7,
+    desc:'Парализует при ударе', ability:'paralyze', trigger:'hit', cd:3000, ultRate:1.3,
+    ultName:'Ядовитый укус', ultDesc:'15 урона + паралич 2.5 сек' },
   { id:'star', name:'Звезда', color:'#ffee88', pattern:'cross', radius:21, hp:130, dmg:3.5, speed:2.6,
     desc:'Взрыв при смерти', ability:'explode', trigger:'passive', cd:0, ultRate:1.1,
     ultName:'Сверхновая', ultDesc:'40 урона' },
-  { id:'bleeder', name:'Кровопийца', color:'#881111', pattern:'stripes', radius:21, hp:140, dmg:3, speed:2.6,
-    desc:'Кровотечение', ability:'bleed', trigger:'hit', cd:2200, ultRate:1.3,
-    ultName:'Кровопускание', ultDesc:'Огромное кровотечение' },
+  { id:'palace', name:'Палач', color:'#881111', pattern:'stripes', radius:21, hp:140, dmg:3, speed:2.6,
+    desc:'Замедляет + доп. урон при ударе', ability:'palace', trigger:'hit', cd:2200, ultRate:1.3,
+    ultName:'Казнь', ultDesc:'Замедление 3 сек + 20 урона' },
   { id:'burner', name:'Поджигатель', color:'#ee7700', pattern:'spiral', radius:21, hp:140, dmg:3, speed:2.6,
     desc:'Горение', ability:'burn', trigger:'hit', cd:2200, ultRate:1.3,
     ultName:'Пожар', ultDesc:'Сильное горение' },
@@ -705,9 +966,9 @@ const BALL_TYPES = [
   { id:'blackhole', name:'Чёрная дыра', color:'#1a1a2a', pattern:'rings', radius:22, hp:150, dmg:3, speed:2.2,
     desc:'Втягивает врага', ability:'blackhole', trigger:'timer', cd:5000, ultRate:0.9,
     ultName:'Коллапс', ultDesc:'25 урона + мощное втягивание' },
-  { id:'telekinesis', name:'Телекинез', color:'#8888ee', pattern:'spiral', radius:21, hp:140, dmg:3, speed:2.5,
-    desc:'Отталкивает', ability:'push', trigger:'timer', cd:3500, ultRate:1.1,
-    ultName:'Ударная волна', ultDesc:'15 урона + отброс' },
+  { id:'graviton', name:'Гравитон', color:'#8888ee', pattern:'spiral', radius:21, hp:140, dmg:3, speed:2.5,
+    desc:'Притягивает врага к себе', ability:'attract', trigger:'timer', cd:3500, ultRate:1.1,
+    ultName:'Гравитационный коллапс', ultDesc:'Мощное притяжение + 20 урона' },
   { id:'alchemist', name:'Алхимик', color:'#66ee22', pattern:'dots', radius:21, hp:140, dmg:3, speed:2.5,
     desc:'Случайный дебафф', ability:'debuff', trigger:'hit', cd:2000, ultRate:1.3,
     ultName:'Коктейль', ultDesc:'3 дебаффа одновременно' },
@@ -735,9 +996,9 @@ const BALL_TYPES = [
   { id:'crystal', name:'Кристалл', color:'#88ccff', pattern:'cross', radius:22, hp:130, dmg:3, speed:2.4,
     desc:'Отражает урон', ability:'reflect', trigger:'passive', cd:0, ultRate:0.9,
     ultName:'Призма', ultDesc:'Отражает 200% урона 3 сек' },
-  { id:'wave', name:'Волна', color:'#3366ee', pattern:'rings', radius:22, hp:145, dmg:3, speed:2.5,
-    desc:'Отталкивает', ability:'push', trigger:'hit', cd:2500, ultRate:1.1,
-    ultName:'Цунами', ultDesc:'20 урона + отброс' },
+  { id:'tsunami', name:'Цунами', color:'#3366ee', pattern:'rings', radius:22, hp:145, dmg:3, speed:2.5,
+    desc:'Отбрасывает + замедляет', ability:'tsunami', trigger:'hit', cd:2500, ultRate:1.1,
+    ultName:'Волна разрушения', ultDesc:'Мощный отброс + замедление 3 сек' },
   { id:'volcano', name:'Вулкан', color:'#ee3300', pattern:'spiral', radius:24, hp:160, dmg:3, speed:2.0,
     desc:'Лава, лечится в ней', ability:'lava', trigger:'timer', cd:4000, ultRate:1.0,
     ultName:'Извержение', ultDesc:'3 лавовые лужи + лечение' },
@@ -780,6 +1041,33 @@ const BALL_TYPES = [
   { id:'octopus', name:'Осьминог', color:'#993399', pattern:'dots', radius:23, hp:155, dmg:2.5, speed:2.4,
     desc:'2 дебаффа', ability:'octopus', trigger:'hit', cd:2200, ultRate:1.2,
     ultName:'Чернила', ultDesc:'4 дебаффа + 10 урона' },
+  { id:'juggernaut', name:'Юнит', color:'#ff6600', pattern:'stripes', radius:30, hp:320, dmg:4, speed:1.2,
+    desc:'Тяжёлый танк, броня +15%', ability:'armorPassive', trigger:'passive', cd:0, ultRate:0.4,
+    ultName:'Сокрушение', ultDesc:'50 урона + стан 2 сек' },
+  { id:'phantom', name:'Фантом', color:'#7744aa', pattern:'spiral', radius:18, hp:100, dmg:5, speed:4.0,
+    desc:'Быстрый убийца, крит ×2', ability:'phantomStrike', trigger:'hit', cd:2000, ultRate:1.0,
+    ultName:'Удар из ниоткуда', ultDesc:'40 урона + невидимость 3 сек' },
+  { id:'quantum', name:'Квант', color:'#00ffaa', pattern:'rings', radius:20, hp:130, dmg:3, speed:3.0,
+    desc:'Телепортируется при ударе', ability:'quantum', trigger:'hit', cd:2500, ultRate:1.2,
+    ultName:'Квантовый скачок', ultDesc:'Телепорт + 25 урона + невидимость 3 сек' },
+  { id:'miner', name:'Майнер', color:'#553322', pattern:'dots', radius:24, hp:150, dmg:3, speed:2.2,
+    desc:'Ставит мины на арене', ability:'mineLayer', trigger:'timer', cd:3500, ultRate:0.9,
+    ultName:'Артобстрел', ultDesc:'5 бомб по арене' },
+  { id:'wraith', name:'Эфир', color:'#667799', pattern:'solid', radius:19, hp:120, dmg:3.5, speed:3.3,
+    desc:'Проходит сквозь снаряды', ability:'phase', trigger:'passive', cd:0, ultRate:1.1,
+    ultName:'Фазовый рывок', ultDesc:'Телепорт + 20 урона' },
+  { id:'medic', name:'Медик', color:'#44ee88', pattern:'cross', radius:21, hp:160, dmg:2, speed:2.6,
+    desc:'Лечит ближайшего союзника (если есть)', ability:'medic', trigger:'timer', cd:2500, ultRate:0.8,
+    ultName:'Массовое лечение', ultDesc:'+80 HP всем' },
+  { id:'ninja', name:'Ниндзя', color:'#222244', pattern:'spiral', radius:19, hp:115, dmg:4, speed:3.5,
+    desc:'Метательные звёзды', ability:'shuriken', trigger:'timer', cd:2000, ultRate:1.0,
+    ultName:'Залп звёзд', ultDesc:'8 снарядов в врага' },
+  { id:'sage', name:'Мудрец', color:'#aabbcc', pattern:'cross', radius:22, hp:155, dmg:3, speed:2.3,
+    desc:'Замедляет врагов пассивно', ability:'wisdom', trigger:'passive', cd:0, ultRate:0.9,
+    ultName:'Ледяной разум', ultDesc:'Заморозка 3 сек + лечение 30' },
+  { id:'inferno', name:'Инферно', color:'#ff4400', pattern:'spiral', radius:21, hp:135, dmg:3.5, speed:2.8,
+    desc:'Создаёт зоны огня на арене', ability:'infernoZone', trigger:'timer', cd:4000, ultRate:1.0,
+    ultName:'Адское пламя', ultDesc:'3 зоны огня на 5 сек' },
 ];
 // ==================== 15 МОДИФИКАТОРОВ ====================
 const MODIFIERS = [
@@ -800,6 +1088,18 @@ const MODIFIERS = [
   { id:'night', name:'🌙 Ночь', desc:'Невидимость 1 сек/5 сек', apply:(f)=>{ f.nightTimer = 5000; } },
 ];
 
+// ==================== АРТЕФАКТЫ ====================
+const ARTIFACTS = [
+  { id:'blood_stone', name:'Кровавый камень', icon:'🩸', desc:'+20% вампиризм', effect:'lifesteal', value:0.2 },
+  { id:'thorns', name:'Шипы', icon:'🌹', desc:'Отражает 15% урона', effect:'thorns', value:0.15 },
+  { id:'battery', name:'Батарея', icon:'🔋', desc:'Ульта заряжается на 30% быстрее', effect:'ultSpeed', value:0.3 },
+  { id:'titan', name:'Титановый', icon:'🛡️', desc:'+25% к HP', effect:'hpBoost', value:0.25 },
+  { id:'swift', name:'Скороход', icon:'💨', desc:'+20% к скорости', effect:'speedBoost', value:0.2 },
+  { id:'rebirth', name:'Перерождение', icon:'🔮', desc:'Одна resurrection за бой', effect:'rebirth', value:1 },
+  { id:'vampire_curse', name:'Вампирский проклятие', icon:'🧛', desc:'+30% кража HP', effect:'lifesteal', value:0.3 },
+  { id:'fury', name:'Ярость', icon:'💢', desc:'+25% урон', effect:'dmgBoost', value:0.25 },
+];
+
 // ==================== СЛОВАРИ ДЛЯ ПАНЕЛИ ====================
 const triggerLabels = {
   hit: { text:'💥 При ударе', class:'tag-hit' },
@@ -812,9 +1112,9 @@ const abilityNames = {
   stun:'Оглушение', lifesteal:'Вампиризм', shield:'Щит', invisible:'Невидимость',
   shoot:'Веер снарядов', teleport:'Телепорт', phoenix:'Возрождение',
   magnet:'Притяжение', bomb:'Бомбы', tornado:'Торнадо', web:'Паутина',
-  spores:'Споры', ghost:'Прыжок', thunder:'Молния', frost:'Заморозка',
+  spores:'Споры', ghost:'Прыжок', thunder:'Молния', cryo:'Крио-стан',
   reflect:'Отражение', heal:'Лечение', random:'Случайный эффект',
-  snakePoison:'Двойной яд', explode:'Взрыв при смерти', bleed:'Кровотечение',
+  paralyze:'Паралич', explode:'Взрыв при смерти', palace:'Палач',
   burn:'Горение', vulnerable:'Уязвимость', armor:'Броня', king:'Королевский',
   stealSpeed:'Кража скорости', charge:'Рывок', dive:'Пике', freeze:'Заморозка',
   clone:'Копия', slowTime:'Замедление времени', execute:'Добивание',
@@ -823,6 +1123,10 @@ const abilityNames = {
   icicles:'Сосульки', octopus:'Осьминог', sniperShot:'Точный выстрел',
   burst:'Очередь', push:'Отброс', blackhole:'Чёрная дыра', lava:'Лава',
   paralyze:'Паралич', debuff:'Дебафф',
+  armorPassive:'Броня', phantomStrike:'Фантомный удар', quantum:'Квантовый скачок',
+  mineLayer:'Мины', phase:'Фазовый сдвиг', medic:'Медик',
+  shuriken:'Звёзды ниндзя', wisdom:'Мудрость', infernoZone:'Зоны огня',
+  attract:'Притяжение', tsunami:'Цунами',
 };
 
 const abilityFullDescs = {
@@ -878,6 +1182,17 @@ const abilityFullDescs = {
   lava:'Раз в 4 сек оставляет лужу лавы (4 урона врагу/0.5 сек, лечит вулкан).',
   paralyze:'При ударе парализует врага на 1.5 сек.',
   debuff:'При ударе накладывает случайный дебафф.',
+  armorPassive:'Пассивно: получает на 15% меньше урона и имеет +25% к HP.',
+  phantomStrike:'При столкновении наносит повышенный урон и ускоряется.',
+  quantum:'При столкновении телепортируется за спину врага.',
+  mineLayer:'Раз в 3.5 сек ставит мину на арену (8 урона).',
+  phase:'Пассивно: игнорирует 50% снарядов врага.',
+  medic:'Раз в 2.5 сек лечит ближайшего бойца (7 HP).',
+  shuriken:'Раз в 2 сек бросает звёзду ниндзя в врага (6 урона).',
+  wisdom:'Пассивно: враги вокруг получают замедление ×0.85.',
+  infernoZone:'Раз в 4 сек создаёт зону огня на арене (4 урона/0.5 сек).',
+  attract:'Раз в 3.5 сек притягивает врага к себе.',
+  tsunami:'При столкновении отбрасывает врага и замедляет на 2 сек.',
 };
 
 // ==================== СОСТОЯНИЕ ====================
@@ -900,6 +1215,21 @@ let currentModifier = null;
 let pendingBattle = null;
 let pickedA = null, pickedB = null;
 let currentPickMatch = null;
+
+// New mode state
+let currentGameMode = 'none'; // 'quick', 'tournament', 'battleRoyale', 'siege', 'infinite', 'sandbox'
+let selectedArtifacts = [];
+let equippedArtifacts = [];
+let battleRoyaleFighters = [];
+let siegeType = null;
+let siegeEnemies = [];
+let infiniteWave = 0;
+let infiniteType = null;
+let infiniteHpRestore = 0;
+let sandboxAFull = null;
+let sandboxBFull = null;
+let brShrinkTimer = 0;
+let brMinSize = { w:300, h:200 };
 
 // ==================== ЗВУК ====================
 let audioCtx = null;
@@ -965,7 +1295,56 @@ document.getElementById('goLibraryBtn').onclick = () => { renderLibrary(); showS
 document.getElementById('goSettingsBtn').onclick = () => showScreen('settingsScreen');
 document.getElementById('closeSettingsBtn').onclick = () => { applySettings(); showScreen('mainScreen'); };
 
-// ==================== БИБЛИОТЕКА ====================
+// New mode buttons
+document.getElementById('goBattleRoyaleBtn').onclick = () => showScreen('battleRoyaleScreen');
+document.getElementById('goSiegeBtn').onclick = () => showScreen('siegeScreen');
+document.getElementById('goInfiniteBtn').onclick = () => showScreen('infiniteScreen');
+document.getElementById('goSandboxBtn').onclick = () => { initSandbox(); showScreen('sandboxScreen'); };
+
+// Battle Royale
+document.querySelectorAll('#sizeBtns button').forEach(btn => {
+  btn.onclick = () => {
+    const size = parseInt(btn.dataset.size);
+    createTournament(size);
+    showScreen('tournamentScreen');
+  };
+});
+document.getElementById('sizeBackBtn').onclick = () => showScreen('mainScreen');
+
+document.querySelectorAll('[data-br]').forEach(btn => {
+  btn.onclick = () => {
+    currentGameMode = 'battleRoyale';
+    startBattleRoyale(8);
+  };
+});
+document.getElementById('brBackBtn').onclick = () => showScreen('mainScreen');
+
+// Siege
+document.querySelectorAll('[data-siege]').forEach(btn => {
+  btn.onclick = () => {
+    currentGameMode = 'siege';
+    siegeType = btn.dataset.siege;
+    startSiege();
+  };
+});
+document.getElementById('siegeBackBtn').onclick = () => showScreen('mainScreen');
+
+// Infinite
+document.querySelectorAll('[data-inf]').forEach(btn => {
+  btn.onclick = () => {
+    currentGameMode = 'infinite';
+    startInfinite();
+  };
+});
+document.getElementById('infBackBtn').onclick = () => showScreen('mainScreen');
+
+// Sandbox
+document.getElementById('sandboxFightBtn').onclick = () => {
+  if (sandboxAFull && sandboxBFull) {
+    startMatch(sandboxAFull, sandboxBFull, null);
+  }
+};
+document.getElementById('sandboxBackBtn').onclick = () => showScreen('mainScreen');
 let libFilter = 'all';
 function renderLibrary() {
   const grid = document.getElementById('libGrid');
@@ -1048,6 +1427,10 @@ function applySettings() {
   settings.modsOn = document.getElementById('modsOn').checked;
   settings.soundOn = document.getElementById('soundOn').checked;
   settings.fxOn = document.getElementById('fxOn').checked;
+  settings.artifactsOn = document.getElementById('artifactsOn').checked;
+  settings.pickupsOn = document.getElementById('pickupsOn').checked;
+  settings.dmgNumbersOn = document.getElementById('dmgNumbersOn').checked;
+  settings.trailsOn = document.getElementById('trailsOn').checked;
   const sz = ARENA_SIZES[settings.arenaSize];
   ARENA_W = sz.w; ARENA_H = sz.h;
   arena.style.width = ARENA_W + 'px';
@@ -1381,35 +1764,294 @@ function showWinner(type) {
   showScreen('winnerScreen');
 }
 
-// ==================== МОДИФИКАТОР ====================
+// ==================== BATTLE ROYALE ====================
+function startBattleRoyale(count) {
+  resetArena();
+  const types = shuffle([...BALL_TYPES]).slice(0, count);
+  battleRoyaleFighters = types.map((t, i) => {
+    const angle = (i / count) * Math.PI * 2;
+    const cx = ARENA_W / 2, cy = ARENA_H / 2;
+    const r = Math.min(ARENA_W, ARENA_H) * 0.35;
+    const x = cx + Math.cos(angle) * r - t.radius;
+    const y = cy + Math.sin(angle) * r - t.radius;
+    return createFighter(t, -1, x, y);
+  });
+  fighters = battleRoyaleFighters;
+  document.getElementById('brCount').style.display = 'block';
+  document.getElementById('modInfo').textContent = 'BR: Последний выживший';
+  document.getElementById('comboInfo').textContent = '0';
+  running = true;
+  paused = false;
+  document.getElementById('pauseOverlay').classList.remove('active');
+  showScreen('arenaScreen');
+  document.getElementById('fightersPanel').classList.add('active');
+  lastTime = performance.now();
+  brShrinkTimer = 30000;
+  initAudio();
+  animId = requestAnimationFrame(loop);
+}
+
+function updateBattleRoyale(dt) {
+  if (!running || paused) return;
+  brShrinkTimer -= dt;
+  if (brShrinkTimer <= 0) {
+    const alive = fighters.filter(f => f.hp > 0 && !f.dead);
+    if (alive.length <= 1) return;
+    brShrinkTimer = 25000;
+    const shrinkX = (ARENA_W - brMinSize.w) * 0.02;
+    const shrinkY = (ARENA_H - brMinSize.h) * 0.02;
+    ARENA_W = Math.max(brMinSize.w, ARENA_W - shrinkX * 2);
+    ARENA_H = Math.max(brMinSize.h, ARENA_H - shrinkY * 2);
+    arena.style.width = ARENA_W + 'px';
+    arena.style.height = ARENA_H + 'px';
+    arena.classList.add('br-shrink');
+    setTimeout(() => arena.classList.remove('br-shrink'), 1000);
+    // Push fighters inward
+    const cx = ARENA_W / 2, cy = ARENA_H / 2;
+    fighters.forEach(f => {
+      if (f.dead) return;
+      const dx = f.x + f.radius - cx;
+      const dy = f.y + f.radius - cy;
+      const dist = Math.hypot(dx, dy) || 1;
+      if (dist > Math.min(ARENA_W, ARENA_H) * 0.4) {
+        f.x -= (dx / dist) * 30;
+        f.y -= (dy / dist) * 30;
+      }
+    });
+  }
+  const alive = fighters.filter(f => f.hp > 0 && !f.dead);
+  document.getElementById('brAlive').textContent = alive.length;
+  if (alive.length === 1) {
+    endBattleRoyale(alive[0]);
+  } else if (alive.length === 0) {
+    // No winner, reset
+    running = false;
+  }
+}
+
+function endBattleRoyale(winner) {
+  running = false;
+  document.getElementById('winnerDot').style.background = getBallGradient(winner.type);
+  document.getElementById('winnerDot').style.color = winner.type.color;
+  document.getElementById('winnerName').textContent = winner.type.name + ' побеждает в BR!';
+  document.getElementById('winnerStats').textContent = 'Последний выживший!';
+  document.getElementById('rematchBtn').style.display = 'none';
+  document.getElementById('nextBtn').style.display = 'none';
+  document.getElementById('brCount').style.display = 'none';
+  showScreen('winnerScreen');
+}
+
+// ==================== SIEGE ====================
+function startSiege() {
+  resetArena();
+  const playerType = BALL_TYPES.find(t => t.id === siegeType);
+  if (!playerType) return;
+  const enemyTypes = ['basic', 'speedster', 'poison', 'electric', 'shadow', 'ice'];
+  const shuffled = shuffle([...enemyTypes]);
+  const enemies = shuffled.slice(0, 3).map(id => BALL_TYPES.find(t => t.id === id));
+  
+  const cx = ARENA_W / 2, cy = ARENA_H / 2;
+  fighters = [
+    createFighter(playerType, -1, cx - playerType.radius * 2, cy - playerType.radius),
+  ];
+  
+  const angles = [0, Math.PI * 0.66, Math.PI * 1.33];
+  enemies.forEach((et, i) => {
+    const a = angles[i];
+    const r = Math.min(ARENA_W, ARENA_H) * 0.3;
+    const x = cx + Math.cos(a) * r - et.radius;
+    const y = cy + Math.sin(a) * r - et.radius;
+    fighters.push(createFighter(et, -1, x, y));
+  });
+  
+  document.getElementById('modInfo').textContent = 'Осада: 1 vs 3';
+  document.getElementById('comboInfo').textContent = '0';
+  running = true;
+  paused = false;
+  document.getElementById('pauseOverlay').classList.remove('active');
+  showScreen('arenaScreen');
+  document.getElementById('fightersPanel').classList.add('active');
+  lastTime = performance.now();
+  initAudio();
+  animId = requestAnimationFrame(loop);
+}
+
+// ==================== INFINITE ====================
+function startInfinite() {
+  resetArena();
+  infiniteWave = 0;
+  const pool = [...BALL_TYPES].filter(t => t.id !== 'dummy');
+  infiniteType = pool[Math.floor(Math.random() * pool.length)];
+  startInfiniteWave();
+}
+
+function startInfiniteWave() {
+  infiniteWave++;
+  const pool = [...BALL_TYPES].filter(t => t.id !== 'dummy' && t.id !== infiniteType.id);
+  const enemyType = pool[Math.floor(Math.random() * pool.length)];
+  
+  const cx = ARENA_W / 2, cy = ARENA_H / 2;
+  fighters = [
+    createFighter(infiniteType, -1, cx - infiniteType.radius * 2 - 50, cy - infiniteType.radius),
+  ];
+  
+  const enemy = createFighter(enemyType, -1, cx + 50, cy - enemyType.radius);
+  fighters.push(enemy);
+  
+  document.getElementById('modInfo').textContent = 'Бесконечный';
+  document.getElementById('waveNum').textContent = infiniteWave;
+  document.getElementById('infiniteInfo').style.display = 'block';
+  document.getElementById('comboInfo').textContent = '0';
+  
+  if (infiniteWave > 1) {
+    // Restore some HP
+    fighters[0].hp = Math.min(fighters[0].maxHp, fighters[0].hp + fighters[0].maxHp * 0.3);
+  }
+  
+  running = true;
+  paused = false;
+  document.getElementById('pauseOverlay').classList.remove('active');
+  showScreen('arenaScreen');
+  document.getElementById('fightersPanel').classList.add('active');
+  lastTime = performance.now();
+  initAudio();
+  animId = requestAnimationFrame(loop);
+}
+
+function endInfiniteWave(winner, loser) {
+  running = false;
+  if (winner === fighters[0]) {
+    // Continue to next wave
+    setTimeout(() => startInfiniteWave(), 1000);
+  } else {
+    // Defeated
+    document.getElementById('winnerDot').style.background = getBallGradient(loser.type);
+    document.getElementById('winnerDot').style.color = loser.type.color;
+    document.getElementById('winnerName').textContent = loser.type.name + ' победил!';
+    document.getElementById('winnerStats').innerHTML = `Пройдено волн: <b>${infiniteWave - 1}</b><br>Побеждён: ${winner.type.name}`;
+    document.getElementById('rematchBtn').style.display = 'inline-block';
+    document.getElementById('nextBtn').style.display = 'none';
+    document.getElementById('infiniteInfo').style.display = 'none';
+    showScreen('winnerScreen');
+  }
+}
+
+// ==================== SANDBOX ====================
+function initSandbox() {
+  sandboxAFull = null;
+  sandboxBFull = null;
+  const pool = [...BALL_TYPES].filter(t => t.id !== 'dummy');
+  shuffle(pool);
+  
+  renderSandboxSide('sandboxA', pool.slice(0, 8), 0);
+  renderSandboxSide('sandboxB', pool.slice(8, 16), 1);
+}
+
+function renderSandboxSide(containerId, types, side) {
+  const container = document.getElementById(containerId);
+  container.innerHTML = '';
+  
+  types.forEach(t => {
+    const card = document.createElement('div');
+    card.style.cssText = 'background:#0a0a1a; border:2px solid #333; border-radius:6px; padding:6px; cursor:pointer; text-align:center; transition:all 0.15s;';
+    card.innerHTML = `
+      <div style="width:24px;height:24px;border-radius:50%;background:${getBallGradient(t)};margin:0 auto 3px;box-shadow:0 0 8px ${t.color};"></div>
+      <div style="font-size:10px;font-weight:bold;">${t.name}</div>
+    `;
+    card.onclick = () => {
+      container.querySelectorAll('div').forEach(c => c.style.borderColor = '#333');
+      card.style.borderColor = side === 0 ? '#ff6b6b' : '#4ecdc4';
+      if (side === 0) sandboxAFull = t;
+      else sandboxBFull = t;
+      updateSandboxButton();
+    };
+    container.appendChild(card);
+  });
+  
+  // Add stats sliders
+  const sliders = document.createElement('div');
+  sliders.style.cssText = 'margin-top:6px;';
+  sliders.innerHTML = `
+    <div class="sandbox-row"><span>HP:</span><input type="range" min="0.5" max="2" step="0.1" value="1" class="sandbox-slider" data-side="${side}" data-stat="hp"></div>
+    <div class="sandbox-row"><span>Урон:</span><input type="range" min="0.5" max="2" step="0.1" value="1" class="sandbox-slider" data-side="${side}" data-stat="dmg"></div>
+    <div class="sandbox-row"><span>Скорость:</span><input type="range" min="0.5" max="2" step="0.1" value="1" class="sandbox-slider" data-side="${side}" data-stat="spd"></div>
+  `;
+  container.appendChild(sliders);
+  
+  sliders.querySelectorAll('.sandbox-slider').forEach(slider => {
+    slider.oninput = () => updateSandboxButton();
+  });
+}
+
+function updateSandboxButton() {
+  const btn = document.getElementById('sandboxFightBtn');
+  btn.disabled = !(sandboxAFull && sandboxBFull);
+}
+
+// ==================== БИБЛИОТЕКА ====================
 let selectedMod = null;
 function requestModifierThenStart(typeA, typeB, quick, match) {
   pendingBattle = { a: typeA, b: typeB, quick, match };
-  if (!settings.modsOn) { currentModifier = null; beginBattle(); return; }
-  selectedMod = null;
-  const grid = document.getElementById('modGrid');
+  
+  // Check if artifacts are enabled
+  if (settings.artifactsOn) {
+    selectedMod = null;
+    selectedArtifacts = [];
+    renderArtifactScreen(typeA, typeB, quick, match);
+    showScreen('artifactScreen');
+  } else {
+    currentModifier = null;
+    beginBattle();
+  }
+}
+
+function renderArtifactScreen(typeA, typeB, quick, match) {
+  const grid = document.getElementById('artifactGrid');
   grid.innerHTML = '';
-  MODIFIERS.forEach(m => {
+  equippedArtifacts = [];
+  updateEquippedArtifacts();
+  
+  ARTIFACTS.forEach(a => {
     const c = document.createElement('div');
-    c.className = 'modCard' + (m.none ? ' none' : '');
-    c.innerHTML = `<div class="mname">${m.name}</div><div class="mdesc">${m.desc}</div>`;
+    c.className = 'artifact-card';
+    c.innerHTML = `<div class="aicon">${a.icon}</div><div class="aname">${a.name}</div><div class="adesc">${a.desc}</div>`;
     c.onclick = () => {
-      document.querySelectorAll('.modCard').forEach(x => x.classList.remove('selected'));
-      c.classList.add('selected');
-      selectedMod = m;
-      document.getElementById('modStartBtn').disabled = false;
+      const idx = selectedArtifacts.indexOf(a.id);
+      if (idx >= 0) {
+        selectedArtifacts.splice(idx, 1);
+        c.classList.remove('selected');
+      } else if (selectedArtifacts.length < 2) {
+        selectedArtifacts.push(a.id);
+        c.classList.add('selected');
+      }
+      updateEquippedArtifacts();
+      document.getElementById('artConfirmBtn').disabled = false;
     };
     grid.appendChild(c);
   });
-  document.getElementById('modStartBtn').disabled = true;
-  showScreen('modScreen');
+  
+  document.getElementById('artConfirmBtn').disabled = true;
 }
-document.getElementById('modStartBtn').onclick = () => {
-  if (!selectedMod) return;
-  currentModifier = selectedMod.none ? null : selectedMod;
+
+function updateEquippedArtifacts() {
+  const container = document.getElementById('equippedArtifacts');
+  container.innerHTML = '';
+  selectedArtifacts.forEach(id => {
+    const art = ARTIFACTS.find(a => a.id === id);
+    if (art) {
+      const el = document.createElement('div');
+      el.className = 'equipped-art';
+      el.innerHTML = `${art.icon} ${art.name}`;
+      container.appendChild(el);
+    }
+  });
+}
+
+document.getElementById('artConfirmBtn').onclick = () => {
+  equippedArtifacts = selectedArtifacts.map(id => ARTIFACTS.find(a => a.id === id));
   beginBattle();
 };
-document.getElementById('modBackBtn').onclick = () => {
+document.getElementById('artBackBtn').onclick = () => {
   pendingBattle = null;
   currentModifier = null;
   if (isQuickBattle) showScreen('pickScreen');
@@ -1420,6 +2062,20 @@ function beginBattle() {
   isQuickBattle = quick;
   activeMatch = match;
   startMatch(a, b, currentModifier);
+}
+
+function applyArtifactsToFighter(f) {
+  equippedArtifacts.forEach(art => {
+    switch(art.effect) {
+      case 'lifesteal': f.lifestealBonus = (f.lifestealBonus || 0) + art.value; break;
+      case 'thorns': f.thornsMult = (f.thornsMult || 0) + art.value; break;
+      case 'ultSpeed': f.ultRateBonus = (f.ultRateBonus || 0) + art.value; break;
+      case 'hpBoost': f.hp = Math.round(f.hp * (1 + art.value)); f.maxHp = Math.round(f.maxHp * (1 + art.value)); break;
+      case 'speedBoost': f.speed *= (1 + art.value); f.baseSpeed *= (1 + art.value); break;
+      case 'rebirth': f.hasRebirth = true; break;
+      case 'dmgBoost': f.dmg *= (1 + art.value); f.baseDmg *= (1 + art.value); break;
+    }
+  });
 }
 
 // ==================== БОЙ ====================
@@ -1460,14 +2116,20 @@ function startMatch(typeA, typeB, modifier) {
 
 function resetArena() {
   if (animId) cancelAnimationFrame(animId);
-  arena.querySelectorAll('.ball, #fxLayer').forEach(el => el.remove());
-  fighters = []; particles = []; projectiles = []; hazards = [];
+  arena.querySelectorAll('.ball, #fxLayer, .dmg-number, .death-pool, .ball-trail, .pickup').forEach(el => el.remove());
+  fighters = []; particles = []; projectiles = []; hazards = []; pickups = [];
   lastTime = 0; screenShake = 0; timeScale = 1; slowmoTimer = 0;
-  running = false; paused = false;
+  running = false; paused = false; battleTimeScale = 1; hitStopFrames = 0;
+  currentGameMode = 'none';
+  equippedArtifacts = [];
   document.getElementById('fightersPanel').classList.remove('active');
+  document.getElementById('brCount').style.display = 'none';
+  document.getElementById('infiniteInfo').style.display = 'none';
+  document.querySelectorAll('.speed-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector('.speed-btn[data-speed="1"]').classList.add('active');
 }
 
-function createFighter(type, side) {
+function createFighter(type, side, customX, customY) {
   const el = document.createElement('div');
   el.className = 'ball';
   el.style.width = type.radius*2+'px';
@@ -1488,11 +2150,11 @@ function createFighter(type, side) {
 
   arena.appendChild(el);
 
-  const x = side === 0 ? 60 : ARENA_W - 60 - type.radius*2;
-  const y = ARENA_H/2 - type.radius;
+  const x = customX !== undefined ? customX : (side === 0 ? 60 : ARENA_W - 60 - type.radius*2);
+  const y = customY !== undefined ? customY : (ARENA_H/2 - type.radius);
   const baseHp = Math.round(type.hp * settings.hpMult);
 
-  return {
+  const f = {
     type, el, ultIcon, x, y,
     vx: (side===0?1:-1) * 1.5,
     vy: (Math.random()-0.5) * 1.5,
@@ -1516,27 +2178,68 @@ function createFighter(type, side) {
     gravity:false, slippery:false, bloodlust:false, critBonus:0,
     mineTimer: undefined, chaosTimer: undefined, nightTimer: undefined,
     side, dead:false,
+    // Artifact properties
+    lifestealBonus: 0, thornsMult: 0, ultRateBonus: 0, hasRebirth: false,
+    // Trail
+    trailTimer: 0,
+    // Pickup
+    pickupTimer: 0,
   };
+  
+  // Apply artifacts
+  if (equippedArtifacts.length > 0) {
+    applyArtifactsToFighter(f);
+  }
+  
+  return f;
 }
 
 // ==================== ЦИКЛ ====================
+let battleTimeScale = 1;
+let hitStopFrames = 0;
+let bgOverlay = null;
+
 function loop(now) {
   if (!running || paused) { animId = requestAnimationFrame(loop); lastTime = now; return; }
   let dt = Math.min(50, now - lastTime || 16);
   lastTime = now;
+  
+  // Hit-stop (freeze frames on crit/ult)
+  if (hitStopFrames > 0) {
+    hitStopFrames--;
+    render();
+    updateHUD();
+    if (screenShake > 0) screenShake = Math.max(0, screenShake - dt*0.02);
+    animId = requestAnimationFrame(loop);
+    return;
+  }
+  
   if (slowmoTimer > 0) { slowmoTimer -= dt; timeScale = 0.3; } else timeScale = 1;
   dt *= timeScale;
-
+  dt *= battleTimeScale;
+  
+  // Battle Royale shrinking
+  if (currentGameMode === 'battleRoyale') {
+    updateBattleRoyale(dt);
+  }
+  
+  // Pickup spawning
+  if (settings.pickupsOn) {
+    updatePickups(dt);
+  }
+  
   updateFighters(dt);
   checkCollisions();
   updateHazards(dt);
   updateProjectiles(dt);
   updateParticles(dt);
+  updateTrails(dt);
   render();
   updateHUD();
-
+  updateDynamicBackground();
+  
   if (screenShake > 0) screenShake = Math.max(0, screenShake - dt*0.02);
-
+  
   if (fighters.length === 2 && fighters.every(f => f.hp > 0)) {
     animId = requestAnimationFrame(loop);
   } else {
@@ -1583,6 +2286,34 @@ function updateFighters(dt) {
     if (f.burnTimer > 0) { f.burnTimer -= dt; f.burnTick += dt; if (f.burnTick >= 300) { f.burnTick = 0; damage(f, 2, '#ee7700'); } }
     if (f.bleedTimer > 0) { f.bleedTimer -= dt; f.bleedTick += dt; if (f.bleedTick >= 400) { f.bleedTick = 0; damage(f, 1.5, '#881111'); } }
     if (f.regenTimer > 0) { f.regenTimer -= dt; f.hp = Math.min(f.maxHp, f.hp + 0.1 * dt/16); }
+
+    // New passive abilities
+    if (f.type.ability === 'infernoZone') {
+      f.infernoTimer = (f.infernoTimer || 0) + dt;
+      if (f.infernoTimer >= 4000) {
+        f.infernoTimer = 0;
+        const ang = Math.random()*Math.PI*2, dist = 30+Math.random()*50;
+        hazards.push({ kind:'lava',
+          x: Math.max(30, Math.min(ARENA_W-30, f.x + Math.cos(ang)*dist)),
+          y: Math.max(30, Math.min(ARENA_H-30, f.y + Math.sin(ang)*dist)),
+          vx:0, vy:0, life:5000, maxLife:5000, owner:f });
+      }
+    }
+    if (f.type.ability === 'wisdom') {
+      fighters.forEach(other => {
+        if (other === f || other.hp <= 0) return;
+        const dist = Math.hypot((f.x+f.radius)-(other.x+other.radius), (f.y+f.radius)-(other.y+other.radius));
+        if (dist < f.radius * 5) {
+          other.slowTimer = Math.max(other.slowTimer || 0, 100);
+        }
+      });
+    }
+    if (f.type.ability === 'armorPassive') {
+      f.armorMult = Math.min(f.armorMult || 1, 0.85);
+    }
+    if (f.type.ability === 'phase') {
+      f.phaseDodge = 0.5; // 50% projectile dodge
+    }
 
     if (f.type.trigger === 'timer' && f.abilityCdLeft <= 0 && f.stunTimer <= 0 && f.paralyzeTimer <= 0) {
       f.abilityCdLeft = f.type.cd;
@@ -1723,9 +2454,15 @@ function resolveHit(attacker, defender, nx, ny) {
 
   if (dmg > 0) damage(defender, dmg, isCrit ? '#ffee00' : attacker.type.color, isCrit);
 
+  // Show floating damage number
+  if (dmg > 0 && settings.dmgNumbersOn) {
+    spawnDamageNumber(defender, dmg, isCrit, 'damage');
+  }
+
   // энергия — зависит ТОЛЬКО от урона и ultRate, без фикс-бонусов
   if (settings.ultsOn) {
-    const gainAtk = dmg * 3 * attacker.type.ultRate;
+    const ultRateMod = attacker.type.ultRate * (1 + (attacker.ultRateBonus || 0));
+    const gainAtk = dmg * 3 * ultRateMod;
     const gainDef = dmg * 2 * defender.type.ultRate;
     attacker.energy = Math.min(100, attacker.energy + gainAtk);
     defender.energy = Math.min(100, defender.energy + gainDef);
@@ -1733,8 +2470,10 @@ function resolveHit(attacker, defender, nx, ny) {
     if (defender.energy >= 100 && !defender.ultReady) { defender.ultReady = true; defender.ultIcon.style.display = 'block'; }
   }
 
-  if (attacker.type.ability === 'lifesteal' && dmg > 0) {
-    attacker.hp = Math.min(attacker.maxHp, attacker.hp + dmg*0.5);
+  // Artifact: lifesteal bonus
+  if ((attacker.type.ability === 'lifesteal' || attacker.lifestealBonus > 0) && dmg > 0) {
+    const totalLifesteal = 0.5 + (attacker.lifestealBonus || 0);
+    attacker.hp = Math.min(attacker.maxHp, attacker.hp + dmg*totalLifesteal);
     spawnText(attacker, '+'+dmg.toFixed(1), '#22dd66');
   }
   if (attacker.type.ability === 'drain' && dmg > 0) {
@@ -1749,6 +2488,12 @@ function resolveHit(attacker, defender, nx, ny) {
   }
   if (attacker.type.ability === 'reflect' && dmg > 0) {
     damage(defender, dmg * 0.3, '#777777');
+  }
+  // Artifact: thorns
+  if (attacker.thornsMult > 0 && dmg > 0) {
+    const thornsDmg = dmg * attacker.thornsMult;
+    damage(defender, thornsDmg, '#ff4444');
+    spawnDamageNumber(defender, thornsDmg, false, 'damage');
   }
   if (attacker.bloodlust && dmg > 0) {
     attacker.hp = Math.min(attacker.maxHp, attacker.hp + dmg*0.2);
@@ -1769,7 +2514,10 @@ function resolveHit(attacker, defender, nx, ny) {
     triggerAbility(attacker, defender, nx, ny);
   }
 
-  if (isCrit) { sfxCrit(); screenShake = 8; spawnRing(defender, '#ffee00'); }
+  if (isCrit) { 
+    sfxCrit(); screenShake = 8; spawnRing(defender, '#ffee00'); 
+    hitStopFrames = 3; // 3 frames hit-stop on crit
+  }
   else sfxHit(attacker.radius);
   spawnParticles(defender.x+defender.radius, defender.y+defender.radius, attacker.type.color, 6);
 }
@@ -1777,6 +2525,7 @@ function resolveHit(attacker, defender, nx, ny) {
 // ==================== УЛЬТА ====================
 function triggerUlt(attacker, defender, nx, ny) {
   sfxUlt(); screenShake = 15; slowmoTimer = 180;
+  hitStopFrames = 5; // 5 frames hit-stop on ultimate
   triggerFlash('rgba(255,230,100,0.4)');
   spawnText(attacker, '⚡ ' + attacker.type.ultName + '!', '#ffe66d');
   spawnParticles(attacker.x+attacker.radius, attacker.y+attacker.radius, '#ffe66d', 30);
@@ -1945,9 +2694,89 @@ function triggerUlt(attacker, defender, nx, ny) {
       }
       sfxShoot(); break; }
     case 'octopus':
-      defender.slowTimer = 2000; defender.vulnerableTimer = 2000;
-      defender.burnTimer = 2000; defender.poisonTimer = 2000;
-      damage(defender, 10*settings.dmgMult, '#993399'); break;
+       defender.slowTimer = 2000; defender.vulnerableTimer = 2000;
+       defender.burnTimer = 2000; defender.poisonTimer = 2000;
+       damage(defender, 10*settings.dmgMult, '#993399'); break;
+    // New ults
+    case 'juggernaut': damage(defender, 50*settings.dmgMult, '#ff6600'); defender.stunTimer = 2000; break;
+    case 'phantom': damage(defender, 40*settings.dmgMult, '#7744aa'); attacker.invisibleTimer = 3000; break;
+    case 'quantum': {
+      attacker.x = defender.x + (Math.random()>0.5?80:-80);
+      attacker.y = defender.y + (Math.random()>0.5?80:-80);
+      attacker.x = Math.max(0, Math.min(ARENA_W-attacker.radius*2, attacker.x));
+      attacker.y = Math.max(0, Math.min(ARENA_H-attacker.radius*2, attacker.y));
+      damage(defender, 25*settings.dmgMult, '#00ffaa');
+      attacker.invisibleTimer = 3000;
+      spawnText(attacker, '🌀', '#00ffaa'); break;
+    }
+    case 'miner':
+      for (let k = 0; k < 5; k++) setTimeout(()=>{
+        if (!running || !defender || defender.hp <= 0) return;
+        damage(defender, 12*settings.dmgMult, '#ee7700');
+        spawnParticles(defender.x+defender.radius, defender.y+defender.radius, '#ee7700', 15);
+      }, k*150);
+      break;
+    case 'wraith': {
+      attacker.x = defender.x + (Math.random()>0.5?80:-80);
+      attacker.y = defender.y + (Math.random()>0.5?80:-80);
+      attacker.x = Math.max(0, Math.min(ARENA_W-attacker.radius*2, attacker.x));
+      attacker.y = Math.max(0, Math.min(ARENA_H-attacker.radius*2, attacker.y));
+      damage(defender, 20*settings.dmgMult, '#667799'); break;
+    }
+    case 'medic':
+      fighters.forEach(f => {
+        if (f.hp > 0) f.hp = Math.min(f.maxHp, f.hp + 80);
+        spawnText(f, '+80', '#44ee88');
+      });
+      sfxHeal(); break;
+    case 'ninja': {
+      const dx = defender.x + defender.radius - (attacker.x + attacker.radius);
+      const dy = defender.y + defender.radius - (attacker.y + attacker.radius);
+      const baseAng = Math.atan2(dy,dx);
+      for (let k = 0; k < 8; k++) {
+        const ang = baseAng + (k-4)*0.15;
+        projectiles.push({
+          x: attacker.x+attacker.radius+Math.cos(ang)*(attacker.radius+6),
+          y: attacker.y+attacker.radius+Math.sin(ang)*(attacker.radius+6),
+          vx: Math.cos(ang)*9, vy: Math.sin(ang)*9,
+          dmg: 5*settings.dmgMult, owner: attacker, color:'#222244', radius:3,
+        });
+        sfxShoot();
+      }
+      spawnText(attacker, '⭐', '#222244'); break;
+    }
+    case 'sage': defender.stunTimer = 3000;
+      attacker.hp = Math.min(attacker.maxHp, attacker.hp + 30);
+      spawnText(attacker, '🧠+30', '#aabbcc'); break;
+    case 'inferno':
+      for (let k = 0; k < 3; k++) {
+        const ang = Math.random()*Math.PI*2, dist = 30+Math.random()*60;
+        hazards.push({ kind:'lava',
+          x: Math.max(30, Math.min(ARENA_W-30, attacker.x + Math.cos(ang)*dist)),
+          y: Math.max(30, Math.min(ARENA_H-30, attacker.y + Math.sin(ang)*dist)),
+          vx:0, vy:0, life:5000, maxLife:5000, owner:attacker });
+      }
+      spawnText(attacker, '🔥', '#ff4400'); break;
+    case 'graviton': {
+      const dx = attacker.x - defender.x, dy = attacker.y - defender.y;
+      const len = Math.hypot(dx,dy) || 1;
+      defender.vx += (dx/len)*8; defender.vy += (dy/len)*8;
+      damage(defender, 20*settings.dmgMult, '#8888ee');
+      sfxMagnet(); break;
+    }
+    case 'tsunami': {
+      const dx = defender.x - attacker.x, dy = defender.y - attacker.y;
+      const len = Math.hypot(dx,dy) || 1;
+      defender.vx += (dx/len)*8; defender.vy += (dy/len)*8;
+      defender.slowTimer = 3000;
+      damage(defender, 20*settings.dmgMult, '#3366ee'); break;
+    }
+    case 'palace': defender.slowTimer = 3000;
+      damage(defender, 20*settings.dmgMult, '#881111'); break;
+    case 'cobra': damage(defender, 15*settings.dmgMult, '#228822');
+      defender.paralyzeTimer = 2500; break;
+    case 'cryomancer': defender.stunTimer = 2000; defender.slowTimer = 4000;
+      spawnText(attacker, '❄️⚡', '#88aadd'); break;
     default:
       damage(defender, 20*settings.dmgMult, attacker.type.color);
   }
@@ -2089,8 +2918,8 @@ function triggerAbility(attacker, defender, nx, ny) {
     case 'thunder': damage(defender, 12*settings.dmgMult, '#ddcc00');
       spawnParticles(defender.x+defender.radius, defender.y+defender.radius, '#ddcc00', 25);
       spawnText(attacker, '⚡⚡', '#ddcc00'); break;
-    case 'frost': case 'freeze': defender.slowTimer = 4000; defender.stunTimer = 500;
-      spawnText(attacker, '❄️❄️', '#88aadd'); break;
+    case 'cryo': defender.stunTimer = 1500; defender.slowTimer = 3000;
+      spawnText(attacker, '❄️⚡', '#88aadd'); break;
     case 'burn': defender.burnTimer = 3000; defender.burnTick = 0; spawnText(attacker, '🔥', '#ee7700'); break;
     case 'bleed': defender.bleedTimer = 3000; defender.bleedTick = 0; spawnText(attacker, '🩸', '#881111'); break;
     case 'vulnerable': defender.vulnerableTimer = 3000; spawnText(attacker, '💔', '#ff1177'); break;
@@ -2116,6 +2945,83 @@ function triggerAbility(attacker, defender, nx, ny) {
       attacker.vx = dx/len*7; attacker.vy = dy/len*7;
       spawnText(attacker, '🦅', '#996622'); break;
     }
+    // New abilities
+    case 'armorPassive': defender.vulnerableTimer = 2000; spawnText(attacker, '🛡️', '#ff6600'); break;
+    case 'phantomStrike': damage(defender, attacker.dmg*1.5, '#7744aa'); attacker.speed *= 1.3;
+      spawnText(attacker, '👻', '#7744aa'); break;
+    case 'quantum': {
+      const backX = defender.x - nx*(defender.radius*2+50);
+      const backY = defender.y - ny*(defender.radius*2+50);
+      attacker.x = Math.max(0, Math.min(ARENA_W-attacker.radius*2, backX));
+      attacker.y = Math.max(0, Math.min(ARENA_H-attacker.radius*2, backY));
+      spawnParticles(attacker.x+attacker.radius, attacker.y+attacker.radius, '#00ffaa', 20);
+      spawnText(attacker, '🌀', '#00ffaa'); break;
+    }
+    case 'mineLayer': {
+      const midX = (attacker.x + defender.x) / 2 + (Math.random()-0.5)*80;
+      const midY = (attacker.y + defender.y) / 2 + (Math.random()-0.5)*80;
+      hazards.push({ kind:'bomb',
+        x: Math.max(30, Math.min(ARENA_W-30, midX)),
+        y: Math.max(30, Math.min(ARENA_H-30, midY)),
+        life:8000, maxLife:8000, owner:attacker, dmg:8, lastTick: Date.now() + 500 });
+      spawnText(attacker, '💣', '#553322'); break;
+    }
+    case 'phase': attacker.invisibleTimer = 1500; spawnText(attacker, '👻', '#667799'); break;
+    case 'medic': {
+      let target = null, minHp = Infinity;
+      fighters.forEach(f => {
+        if (f !== attacker && f.hp > 0 && f.hp < minHp) { minHp = f.hp; target = f; }
+      });
+      if (target) {
+        target.hp = Math.min(target.maxHp, target.hp + 7);
+        spawnText(target, '+7', '#44ee88');
+        sfxHeal();
+      }
+      spawnText(attacker, '💚', '#44ee88'); break;
+    }
+    case 'shuriken': {
+      const dx = defender.x + defender.radius - (attacker.x + attacker.radius);
+      const dy = defender.y + defender.radius - (attacker.y + attacker.radius);
+      const len = Math.hypot(dx,dy) || 1;
+      projectiles.push({
+        x: attacker.x+attacker.radius+(dx/len)*(attacker.radius+6),
+        y: attacker.y+attacker.radius+(dy/len)*(attacker.radius+6),
+        vx: dx/len*8, vy: dy/len*8,
+        dmg: 6*settings.dmgMult, owner: attacker, color:'#222244', radius:4,
+      });
+      sfxShoot(); spawnText(attacker, '⭐', '#222244'); break;
+    }
+    case 'wisdom': defender.slowTimer = Math.max(defender.slowTimer, 1500);
+      spawnText(attacker, '🧠', '#aabbcc'); break;
+    case 'infernoZone': {
+      const ang = Math.random()*Math.PI*2, dist = 30+Math.random()*50;
+      hazards.push({ kind:'lava',
+        x: Math.max(30, Math.min(ARENA_W-30, attacker.x + Math.cos(ang)*dist)),
+        y: Math.max(30, Math.min(ARENA_H-30, attacker.y + Math.sin(ang)*dist)),
+        vx:0, vy:0, life:5000, maxLife:5000, owner:attacker });
+      spawnText(attacker, '🔥', '#ff4400'); break;
+    }
+    case 'attract': {
+      const dx = attacker.x - defender.x, dy = attacker.y - defender.y;
+      const len = Math.hypot(dx,dy) || 1;
+      defender.vx += (dx/len)*3; defender.vy += (dy/len)*3;
+      sfxMagnet();
+      spawnText(attacker, '🧲', '#8888ee'); break;
+    }
+    case 'tsunami': {
+      const dx = defender.x - attacker.x, dy = defender.y - attacker.y;
+      const len = Math.hypot(dx,dy) || 1;
+      defender.vx += (dx/len)*5; defender.vy += (dy/len)*5;
+      defender.slowTimer = 2000;
+      spawnText(attacker, '🌊', '#3366ee'); break;
+    }
+    case 'palace': {
+      defender.slowTimer = 2000;
+      damage(defender, attacker.dmg * 0.5, '#881111');
+      spawnText(attacker, '⚔️', '#881111'); break;
+    }
+    case 'cobra': defender.paralyzeTimer = 1500;
+      spawnText(attacker, '🦂', '#228822'); break;
   }
 }
 
@@ -2131,6 +3037,15 @@ function damage(target, amount, color, isCrit) {
   spawnParticles(target.x+target.radius, target.y+target.radius, color, isCrit ? 10 : 3);
   if (isCrit) spawnText(target, 'CRIT!', '#ffee00');
   if (target.hp <= 0) {
+    // Rebirth artifact
+    if (target.hasRebirth && !target.rebirthUsed) {
+      target.rebirthUsed = true;
+      target.hasRebirth = false;
+      target.hp = target.maxHp * 0.4;
+      spawnText(target, '🔮 Перерождение!', '#aa44ff');
+      spawnParticles(target.x+target.radius, target.y+target.radius, '#aa44ff', 30);
+      return;
+    }
     if (target.type.ability === 'phoenix' && !target.phoenixUsed) {
       target.phoenixUsed = true;
       target.hp = target.maxHp * 0.5;
@@ -2145,6 +3060,7 @@ function damage(target, amount, color, isCrit) {
     }
     target.dead = true;
     spawnParticles(target.x+target.radius, target.y+target.radius, target.type.color, 40);
+    spawnDeathExplosion(target);
     sfxDeath();
   }
 }
@@ -2232,6 +3148,8 @@ function updateProjectiles(dt) {
     if (p.x < 0 || p.x > ARENA_W || p.y < 0 || p.y > ARENA_H) { projectiles.splice(i,1); continue; }
     for (const f of fighters) {
       if (f === p.owner || f.hp <= 0) continue;
+      // Phase ability: dodge projectiles
+      if (f.type.ability === 'phase' && Math.random() < 0.5) continue;
       if (Math.hypot(p.x-(f.x+f.radius), p.y-(f.y+f.radius)) < f.radius+p.radius) {
         damage(f, p.dmg, p.color);
         spawnParticles(p.x, p.y, p.color, p.big ? 25 : 12);
@@ -2276,6 +3194,154 @@ function spawnText(f, text, color) {
   arena.appendChild(el);
   requestAnimationFrame(()=>{ el.style.transform='translateY(-40px)'; el.style.opacity='0'; });
   setTimeout(()=>el.remove(), 800);
+}
+
+// ==================== FLOATING DAMAGE NUMBERS ====================
+function spawnDamageNumber(f, amount, isCrit, type) {
+  if (!settings.dmgNumbersOn) return;
+  const el = document.createElement('div');
+  const size = isCrit ? 18 : (type === 'heal' ? 13 : 13);
+  const cls = isCrit ? 'crit' : (type === 'heal' ? 'heal' : 'normal');
+  el.className = 'dmg-number ' + cls;
+  el.style.fontSize = size + 'px';
+  el.style.left = (f.x + f.radius + (Math.random()-0.5)*30) + 'px';
+  el.style.top = (f.y - 10) + 'px';
+  el.textContent = type === 'heal' ? '+' + Math.round(amount) : '-' + Math.round(amount);
+  if (isCrit) el.textContent = '💥' + el.textContent;
+  arena.appendChild(el);
+  setTimeout(()=>el.remove(), 1000);
+}
+
+// ==================== DEATH ANIMATION ====================
+function spawnDeathExplosion(f) {
+  // Create colored pool
+  if (settings.fxOn) {
+    const pool = document.createElement('div');
+    pool.className = 'death-pool';
+    const poolSize = f.radius * 4;
+    pool.style.cssText = `left:${f.x+f.radius-poolSize/2}px;top:${f.y+f.radius-poolSize/2}px;width:${poolSize}px;height:${poolSize}px;background:radial-gradient(circle,${f.type.color}66,transparent);animation:poolFade 2.5s ease-out forwards;`;
+    arena.appendChild(pool);
+    setTimeout(()=>pool.remove(), 2500);
+  }
+}
+
+// ==================== TRAILS ====================
+function updateTrails(dt) {
+  if (!settings.trailsOn) return;
+  fighters.forEach(f => {
+    if (f.dead || f.hp <= 0) return;
+    const speed = Math.hypot(f.vx, f.vy);
+    if (speed > 2.5) {
+      f.trailTimer += dt;
+      if (f.trailTimer > 50) {
+        f.trailTimer = 0;
+        const trail = document.createElement('div');
+        trail.className = 'ball-trail';
+        const size = f.radius * 1.2;
+        trail.style.cssText = `left:${f.x+f.radius-size/2}px;top:${f.y+f.radius-size/2}px;width:${size}px;height:${size}px;background:radial-gradient(circle,${f.type.color}44,transparent);`;
+        arena.appendChild(trail);
+        setTimeout(()=>trail.remove(), 300);
+      }
+    }
+  });
+}
+
+// ==================== PICKUPS ====================
+let pickups = [];
+
+function updatePickups(dt) {
+  // Spawn pickups periodically
+  pickups.forEach((p, i) => {
+    p.life -= dt;
+    p.bobTimer = (p.bobTimer || 0) + dt;
+    if (p.life <= 0) { pickups.splice(i, 1); removePickupEl(i); return; }
+    
+    // Check collision with fighters
+    fighters.forEach(f => {
+      if (f.dead || f.hp <= 0) return;
+      const dist = Math.hypot((f.x+f.radius) - p.x, (f.y+f.radius) - p.y);
+      if (dist < f.radius + 15) {
+        applyPickup(f, p);
+        pickups.splice(i, 1);
+        removePickupEl(i);
+      }
+    });
+  });
+  
+  // Spawn new pickups
+  if (Math.random() < 0.003 * dt/16 && pickups.length < 3) {
+    spawnPickup();
+  }
+}
+
+function spawnPickup() {
+  const margin = 40;
+  const type = Math.random() < 0.6 ? 'health' : 'ultimate';
+  const p = {
+    type,
+    x: margin + Math.random() * (ARENA_W - margin*2),
+    y: margin + Math.random() * (ARENA_H - margin*2),
+    life: 12000,
+    maxLife: 12000,
+    el: null,
+    bobTimer: 0,
+  };
+  
+  // Create visual element
+  const el = document.createElement('div');
+  el.className = 'pickup ' + p.type;
+  el.textContent = p.type === 'health' ? '+' : '⚡';
+  arena.appendChild(el);
+  p.el = el;
+  pickups.push(p);
+}
+
+function removePickupEl(index) {
+  const p = pickups[index];
+  if (p && p.el) p.el.remove();
+}
+
+function applyPickup(f, p) {
+  if (p.type === 'health') {
+    const heal = Math.round(f.maxHp * 0.15);
+    f.hp = Math.min(f.maxHp, f.hp + heal);
+    spawnDamageNumber(f, heal, false, 'heal');
+    sfxHeal();
+  } else if (p.type === 'ultimate') {
+    f.energy = Math.min(100, f.energy + 40);
+    if (f.energy >= 100 && !f.ultReady) {
+      f.ultReady = true;
+      f.ultIcon.style.display = 'block';
+    }
+    spawnDamageNumber(f, 0, false, 'heal');
+    spawnText(f, '⚡+40%', '#ffe66d');
+    sfxUlt();
+  }
+}
+
+// ==================== DYNAMIC BACKGROUND ====================
+function updateDynamicBackground() {
+  if (!bgOverlay) {
+    bgOverlay = document.createElement('div');
+    bgOverlay.style.cssText = 'position:absolute;inset:0;pointer-events:none;z-index:0;transition:background 1s;';
+    arena.insertBefore(bgOverlay, arena.firstChild);
+  }
+  
+  // Check for active ult effects
+  let bgColor = 'transparent';
+  fighters.forEach(f => {
+    if (f.dead) return;
+    if (f.ultReady) {
+      bgColor = f.type.color + '11';
+    }
+    if (f.slowTimer > 0) bgColor = '#44bbff11';
+    if (f.burnTimer > 0) bgColor = '#ee770011';
+    if (f.poisonTimer > 0) bgColor = '#44dd4411';
+  });
+  
+  if (bgOverlay.style.background !== bgColor) {
+    bgOverlay.style.background = bgColor;
+  }
 }
 function updateParticles(dt) {
   for (let i=particles.length-1;i>=0;i--) {
@@ -2336,6 +3402,48 @@ function render() {
 // ==================== КОНЕЦ ====================
 function endBattle() {
   running = false;
+  
+  // Handle different game modes
+  if (currentGameMode === 'battleRoyale') {
+    // BR already handles its own end
+    return;
+  }
+  
+  if (currentGameMode === 'infinite') {
+    const winner = fighters.find(f => f.hp > 0);
+    const loser = fighters.find(f => f.hp <= 0);
+    if (winner && loser) {
+      endInfiniteWave(winner, loser);
+    }
+    return;
+  }
+  
+  if (currentGameMode === 'siege') {
+    const playerFighter = fighters[0];
+    const aliveEnemies = fighters.filter(f => f !== playerFighter && f.hp > 0 && !f.dead);
+    if (aliveEnemies.length === 0) {
+      // Player won siege
+      document.getElementById('winnerDot').style.background = getBallGradient(playerFighter.type);
+      document.getElementById('winnerDot').style.color = playerFighter.type.color;
+      document.getElementById('winnerName').textContent = playerFighter.type.name + ' побеждает в Осаде!';
+      document.getElementById('winnerStats').textContent = 'Все враги уничтожены!';
+      document.getElementById('rematchBtn').style.display = 'inline-block';
+      document.getElementById('nextBtn').style.display = 'none';
+      showScreen('winnerScreen');
+    } else if (playerFighter.hp <= 0) {
+      // Player lost
+      const winner = aliveEnemies[0];
+      document.getElementById('winnerDot').style.background = getBallGradient(winner.type);
+      document.getElementById('winnerDot').style.color = winner.type.color;
+      document.getElementById('winnerName').textContent = winner.type.name + ' побеждает!';
+      document.getElementById('winnerStats').textContent = 'Осада провалена...';
+      document.getElementById('rematchBtn').style.display = 'inline-block';
+      document.getElementById('nextBtn').style.display = 'none';
+      showScreen('winnerScreen');
+    }
+    return;
+  }
+  
   const [a,b] = fighters;
   let winner = null, loser = null;
   if (a.hp <= 0 && b.hp <= 0) { winner = a; loser = b; }
@@ -2364,9 +3472,15 @@ function showBattleResult(winner, loser) {
 }
 
 document.getElementById('rematchBtn').onclick = () => {
-  const winnerType = fighters.find(f => f.hp > 0)?.type;
-  const loserType = fighters.find(f => f.hp <= 0)?.type;
-  requestModifierThenStart(winnerType || pickedA, loserType || pickedB, true, null);
+  if (currentGameMode === 'infinite') {
+    startInfinite();
+  } else if (currentGameMode === 'siege') {
+    startSiege();
+  } else {
+    const winnerType = fighters.find(f => f.hp > 0)?.type;
+    const loserType = fighters.find(f => f.hp <= 0)?.type;
+    requestModifierThenStart(winnerType || pickedA, loserType || pickedB, true, null);
+  }
 };
 document.getElementById('nextBtn').onclick = () => { advanceWinner(); };
 document.getElementById('toMenuBtn').onclick = () => {
@@ -2395,6 +3509,25 @@ document.getElementById('exitBtn').onclick = () => {
   if (!confirm('Выйти из боя?')) return;
   exitBattle();
 };
+
+// Speed controls
+document.querySelectorAll('.speed-btn').forEach(btn => {
+  btn.onclick = () => {
+    document.querySelectorAll('.speed-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    battleTimeScale = parseFloat(btn.dataset.speed);
+  };
+});
+
+// Fullscreen button
+document.getElementById('fullscreenBtn').onclick = toggleFullscreen;
+function toggleFullscreen() {
+  if (!document.fullscreenElement) {
+    document.documentElement.requestFullscreen().catch(()=>{});
+  } else {
+    document.exitFullscreen().catch(()=>{});
+  }
+}
 function exitBattle() {
   running = false;
   if (animId) cancelAnimationFrame(animId);
@@ -2407,8 +3540,11 @@ function exitBattle() {
     activeMatch = null;
   }
   resetArena();
-  if (isQuickBattle) showScreen('mainScreen');
-  else showScreen('tournamentScreen');
+  if (isQuickBattle || currentGameMode === 'battleRoyale' || currentGameMode === 'siege' || currentGameMode === 'infinite') {
+    showScreen('mainScreen');
+  } else {
+    showScreen('tournamentScreen');
+  }
 }
 
 document.addEventListener('keydown', (e) => {
